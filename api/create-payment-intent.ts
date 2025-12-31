@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
 // Initialize Stripe with the test secret key from environment variables
