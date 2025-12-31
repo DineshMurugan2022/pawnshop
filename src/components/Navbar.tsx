@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Gem, Scale, LogOut, User, Settings, ShoppingBag } from 'lucide-react';
+import { Gem, Scale, LogOut, User, Settings, ShoppingBag, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CartDrawer } from './CartDrawer';
+import { WishlistDrawer } from './WishlistDrawer';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { JewelryItem } from '../lib/supabase';
+import { localJewelryItems } from '../utils/localData';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { cart, updateQuantity, totalItems } = useCart();
+  const { wishlist } = useWishlist();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cart, setCart] = useState<{ [key: string]: number }>({});
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [jewelryItems, setJewelryItems] = useState<JewelryItem[]>([]);
 
   useEffect(() => {
@@ -30,18 +36,20 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    // Basic cart sync (in a real app, use a Context or Redux)
-    const storedCart = localStorage.getItem('jewelry-cart');
-    if (storedCart) {
-      setCart(JSON.parse(storedCart));
-    }
-
     const fetchItems = async () => {
-      const { data } = await supabase.from('jewelry_items').select('*');
-      if (data) setJewelryItems(data);
+      try {
+        const { data } = await supabase.from('jewelry_items').select('*');
+        if (data && data.length > 0) {
+          setJewelryItems(data);
+        } else {
+          setJewelryItems(localJewelryItems);
+        }
+      } catch (error) {
+        setJewelryItems(localJewelryItems);
+      }
     };
     fetchItems();
-  }, [isCartOpen]); // Refresh when drawer opens
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -79,22 +87,39 @@ export default function Navbar() {
         </div>
         <div className="flex items-center space-x-4">
           <button
+            onClick={() => setIsWishlistOpen(true)}
+            className="p-2 hover:bg-purple-700 rounded-lg relative transition-colors text-red-100 hover:text-white"
+          >
+            <Heart className={`h-6 w-6 ${wishlist.length > 0 ? 'fill-current' : ''}`} />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {wishlist.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setIsCartOpen(true)}
             className="p-2 hover:bg-purple-700 rounded-lg relative transition-colors"
           >
             <ShoppingBag className="h-6 w-6" />
-            {Object.keys(cart).length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {Object.values(cart).reduce((a, b) => a + b, 0)}
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-purple-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {totalItems}
               </span>
             )}
           </button>
           {!loading && (
             user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-purple-200">
-                  {user.email}
-                </span>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center space-x-2 text-purple-200 hover:text-white transition-colors group"
+                >
+                  <div className="h-8 w-8 rounded-full bg-purple-700 flex items-center justify-center font-bold text-sm border border-purple-600 group-hover:border-white transition-all">
+                    {user.email?.[0].toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline">{user.email}</span>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 transition-colors"
@@ -120,17 +145,16 @@ export default function Navbar() {
         onClose={() => setIsCartOpen(false)}
         cart={cart}
         items={jewelryItems}
-        updateCart={(id, qty) => {
-          const newCart = { ...cart };
-          if (qty <= 0) delete newCart[id];
-          else newCart[id] = qty;
-          setCart(newCart);
-          localStorage.setItem('jewelry-cart', JSON.stringify(newCart));
-        }}
+        updateCart={updateQuantity}
         onCheckout={() => {
           setIsCartOpen(false);
-          navigate('/jewelry'); // Redirect to jewelry page where checkout logic is
+          navigate('/jewelry?checkout=true');
         }}
+      />
+      <WishlistDrawer
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        items={jewelryItems}
       />
     </nav>
   );

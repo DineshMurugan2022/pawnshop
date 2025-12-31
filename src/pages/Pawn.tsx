@@ -8,8 +8,7 @@ const Pawn: React.FC = () => {
   const [principal, setPrincipal] = useState<number>(1000);
   const [rate, setRate] = useState<number>(5);
   const [time, setTime] = useState<number>(1);
-  const [isYearly, setIsYearly] = useState<boolean>(true);
-  const [compound, setCompound] = useState<boolean>(false);
+  const [durationUnit, setDurationUnit] = useState<'months' | 'years'>('years');
   const [amount, setAmount] = useState<number>(0);
   const [interest, setInterest] = useState<number>(0);
 
@@ -51,17 +50,11 @@ const Pawn: React.FC = () => {
   };
 
   const calculateInterest = () => {
-    let finalAmount = 0;
-    let totalInterest = 0;
-    let timePeriod = isYearly ? time : time / 12;
+    // Treat 'rate' as Monthly Interest Rate
+    const timeInMonths = durationUnit === 'years' ? time * 12 : time;
+    const totalInterest = principal * (rate / 100) * timeInMonths;
+    const finalAmount = principal + totalInterest;
 
-    if (compound) {
-      finalAmount = principal * Math.pow(1 + rate / 100, timePeriod);
-    } else {
-      finalAmount = principal * (1 + (rate / 100) * timePeriod);
-    }
-
-    totalInterest = finalAmount - principal;
     setAmount(finalAmount);
     setInterest(totalInterest);
   };
@@ -159,7 +152,7 @@ const Pawn: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Annual Interest Rate (%)
+                  Monthly Interest Rate (%)
                 </label>
                 <input
                   type="number"
@@ -173,36 +166,22 @@ const Pawn: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Time Duration
                 </label>
-                <input
-                  type="number"
-                  value={time}
-                  onChange={(e) => setTime(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center">
+                <div className="flex gap-2">
                   <input
-                    type="checkbox"
-                    checked={isYearly}
-                    onChange={() => setIsYearly(!isYearly)}
-                    className="mr-2"
+                    type="number"
+                    value={time}
+                    onChange={(e) => setTime(Number(e.target.value))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                   />
-                  <span className="text-sm text-gray-700">
-                    {isYearly ? "Years" : "Months"}
-                  </span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={compound}
-                    onChange={() => setCompound(!compound)}
-                    className="mr-2"
-                  />
-                  <span className="text-sm text-gray-700">Compound Interest</span>
-                </label>
+                  <select
+                    value={durationUnit}
+                    onChange={(e) => setDurationUnit(e.target.value as 'months' | 'years')}
+                    className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 bg-white"
+                  >
+                    <option value="months">Months</option>
+                    <option value="years">Years</option>
+                  </select>
+                </div>
               </div>
 
               <button
@@ -213,14 +192,26 @@ const Pawn: React.FC = () => {
               </button>
 
               {amount > 0 && (
-                <div className="mt-4 p-4 bg-purple-50 rounded-lg">
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-purple-900">
-                      Final Amount: ₹{amount.toFixed(2)}
-                    </p>
-                    <p className="text-purple-700">
-                      Total Interest: ₹{interest.toFixed(2)}
-                    </p>
+                <div className="mt-4 p-4 bg-purple-50 rounded-lg space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-2 bg-white rounded shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase font-bold">Total Amount</p>
+                      <p className="text-lg font-bold text-purple-900">₹{amount.toFixed(2)}</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase font-bold">Total Interest</p>
+                      <p className="text-lg font-bold text-purple-700">₹{interest.toFixed(2)}</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase font-bold">Interest %</p>
+                      <p className="text-lg font-bold text-purple-600">{((interest / principal) * 100).toFixed(1)}%</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase font-bold">Total Months</p>
+                      <p className="text-lg font-bold text-purple-600">
+                        {durationUnit === 'years' ? time * 12 : time}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -231,31 +222,26 @@ const Pawn: React.FC = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Interest</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Interest</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Amount</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100 italic">
-                      {[...Array(Math.min(time, 12))].map((_, i) => {
-                        const period = i + 1;
-                        let periodAmount = 0;
-                        let timePeriod = isYearly ? period : period / 12;
-                        if (compound) {
-                          periodAmount = principal * Math.pow(1 + rate / 100, timePeriod);
-                        } else {
-                          periodAmount = principal * (1 + (rate / 100) * timePeriod);
-                        }
+                      {[...Array(Math.min(durationUnit === 'years' ? time * 12 : time, 12))].map((_, i) => {
+                        const month = i + 1;
+                        const monthlyInterest = principal * (rate / 100);
+                        const accumInterest = monthlyInterest * month;
                         return (
                           <tr key={i}>
-                            <td className="px-3 py-2 text-sm text-gray-600 font-medium">{isYearly ? `Year ${period}` : `Month ${period}`}</td>
-                            <td className="px-3 py-2 text-sm text-gray-900 font-bold">₹{periodAmount.toFixed(0)}</td>
-                            <td className="px-3 py-2 text-sm text-purple-600">₹{(periodAmount - principal).toFixed(0)}</td>
+                            <td className="px-3 py-2 text-sm text-gray-600 font-medium">Month {month}</td>
+                            <td className="px-3 py-2 text-sm text-purple-600">₹{accumInterest.toFixed(0)}</td>
+                            <td className="px-3 py-2 text-sm text-gray-900 font-bold">₹{(principal + accumInterest).toFixed(0)}</td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
-                  {time > 12 && <p className="p-2 text-xs text-center text-gray-400">Showing first 12 periods...</p>}
+                  {(durationUnit === 'years' ? time * 12 : time) > 12 && <p className="p-2 text-xs text-center text-gray-400">Showing first 12 months...</p>}
                 </div>
               )}
             </div>

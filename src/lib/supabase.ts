@@ -20,13 +20,18 @@ export type Profile = {
   updated_at: string;
 };
 
+export type MetalType = 'gold' | 'silver' | 'diamond' | 'platinum' | 'none';
+
 export type JewelryItem = {
   id: string;
   name: string;
   description: string | null;
-  price: number;
+  price: number; // This will be the base/fixed price or calculated price
   category: string;
   image_url: string | null;
+  metal_type: MetalType;
+  weight: number; // weight in grams
+  wastage_percent: number;
   created_at: string;
   updated_at: string;
 };
