@@ -1,8 +1,8 @@
 // Quick script to seed the database
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://mbvnvavqzmyhlcybdips.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idm52YXZxem15aGxjeWJkaXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMzA1OTYsImV4cCI6MjA1NjkwNjU5Nn0.VyLF5BY0ynDXvYBE1E16kFSx4hwN0nztUwlYCTXun-E';
+const supabaseUrl = 'https://rieyzldbygsgfiwhfdmo.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpZXl6bGRieWdzZ2Zpd2hmZG1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxNjc1MjYsImV4cCI6MjA4Mjc0MzUyNn0.Tr8GnAYZxjiqO_SJqpMKDOWswMFEt4ksc24ujgbrcpg';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -67,13 +67,13 @@ const sampleJewelryItems = [
 
 async function seedDatabase() {
   console.log('Adding sample jewelry items...');
-  
+
   for (const item of sampleJewelryItems) {
     try {
       const { error } = await supabase
         .from('jewelry_items')
         .insert(item);
-      
+
       if (error) {
         console.error('Error inserting item:', error);
       } else {
@@ -83,7 +83,7 @@ async function seedDatabase() {
       console.error('Error:', error);
     }
   }
-  
+
   console.log('🎉 Seeding completed! Refresh your browser to see the jewelry items.');
 }
 
