@@ -317,15 +317,44 @@ ALTER TABLE public.bank_pledge_receives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cash_transactions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies (Allow public read for now - adjust based on your security needs)
-CREATE POLICY IF NOT EXISTS "Anyone can view metal rates" ON public.metal_rates FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view companies" ON public.companies FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view loan types" ON public.loan_types FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view jewellery types" ON public.jewellery_types FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view schemes" ON public.schemes FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view banks" ON public.bank_master FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view customers" ON public.customers FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view pledges" ON public.pledges FOR SELECT TO public USING (true);
-CREATE POLICY IF NOT EXISTS "Anyone can view pledge items" ON public.pledge_items FOR SELECT TO public USING (true);
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'metal_rates' AND policyname = 'Anyone can view metal rates') THEN
+    CREATE POLICY "Anyone can view metal rates" ON public.metal_rates FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'companies' AND policyname = 'Anyone can view companies') THEN
+    CREATE POLICY "Anyone can view companies" ON public.companies FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'loan_types' AND policyname = 'Anyone can view loan types') THEN
+    CREATE POLICY "Anyone can view loan types" ON public.loan_types FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'jewellery_types' AND policyname = 'Anyone can view jewellery types') THEN
+    CREATE POLICY "Anyone can view jewellery types" ON public.jewellery_types FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'schemes' AND policyname = 'Anyone can view schemes') THEN
+    CREATE POLICY "Anyone can view schemes" ON public.schemes FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'bank_master' AND policyname = 'Anyone can view banks') THEN
+    CREATE POLICY "Anyone can view banks" ON public.bank_master FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'customers' AND policyname = 'Anyone can view customers') THEN
+    CREATE POLICY "Anyone can view customers" ON public.customers FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'pledges' AND policyname = 'Anyone can view pledges') THEN
+    CREATE POLICY "Anyone can view pledges" ON public.pledges FOR SELECT TO public USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'pledge_items' AND policyname = 'Anyone can view pledge items') THEN
+    CREATE POLICY "Anyone can view pledge items" ON public.pledge_items FOR SELECT TO public USING (true);
+  END IF;
+END $$;
 
 -- Functions
 CREATE OR REPLACE FUNCTION generate_pledge_number()
