@@ -1,0 +1,89 @@
+/* Import Tailwind CSS */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+.jewelry-title {
+    color: #ff6347; /* Tomato color */
+    animation: fadeIn 2s ease-in-out;
+    padding: 20px; /* Add space around the text */
+    font-weight: bold;
+    font-size: 2rem;
+    text-align: center;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    margin: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+/* Add this CSS to your main CSS file */
+.pawn-title {
+    text-align: center; /* Center align the title text */
+    font-size: 24px; /* Set the font size */
+    color: #333; /* Set the text color */
+}
+
+
+
+.interest-calculator {
+    height: 80vh; /* Full height of the viewport */
+    width: 25%; /* 25% width of the viewport */
+    position: absolute; 
+    top: 50; /* Align to the top */
+     /* Align to the top */
+    background-color: #f9f9f9; /* Background color */
+    padding: 20px; /* Padding */
+    border-right: 1px solid #ccc; /* Border on the right */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Shadow effect */
+}
+
+.interest-calculator h2 {
+    font-size: 20px; /* Set the font size */
+    color: #555; /* Set the text color */
+}
+
+.interest-calculator label {
+    display: block; /* Display labels as block elements */
+    margin-bottom: 10px; /* Add margin below each label */
+    font-size: 16px; /* Set the font size */
+    color: #666; /* Set the text color */
+}
+
+.interest-calculator input {
+    width: 100%; /* Set the input width to 100% */
+    padding: 8px; /* Add padding */
+    margin-top: 5px; /* Add margin above each input */
+    border: 1px solid #ccc; /* Add a border */
+    border-radius: 4px; /* Round the corners */
+}
+
+.interest-calculator button {
+    display: block; /* Display the button as a block element */
+    width: 100%; /* Set the button width to 100% */
+    padding: 10px; /* Add padding */
+    background-color: #007bff; /* Set the background color */
+    color: white; /* Set the text color */
+    border: none; /* Remove the border */
+    border-radius: 4px; /* Round the corners */
+    cursor: pointer; /* Change the cursor to a pointer */
+    margin-top: 10px; /* Add margin above the button */
+}
+
+.interest-calculator button:hover {
+    background-color: #0056b3; /* Change the background color on hover */
+}
+
+.interest-calculator p {
+    margin-top: 10px; /* Add margin above the paragraph */
+    font-size: 16px; /* Set the font size */
+    color: #333; /* Set the text color */
+}
+
