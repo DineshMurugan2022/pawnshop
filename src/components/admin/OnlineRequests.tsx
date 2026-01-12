@@ -18,14 +18,46 @@ const OnlineRequests: React.FC<OnlineRequestsProps> = ({ onApprove }) => {
 
     const fetchRequests = async () => {
         try {
-            const { data, error } = await supabase
+            // 1. Fetch Requests
+            const { data: requestsData, error: requestsError } = await supabase
                 .from('pawn_requests')
-                .select('*, profiles(full_name, email, phone)') // Join with profiles if possible, or user metadata
+                .select('*')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setRequests(data || []);
+            if (requestsError) throw requestsError;
+
+            if (!requestsData || requestsData.length === 0) {
+                setRequests([]);
+                return;
+            }
+
+            // 2. Fetch Profiles for these requests
+            const userIds = Array.from(new Set(requestsData.map(r => r.user_id)));
+            const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, full_name, email, phone')
+                .in('id', userIds);
+
+            if (profilesError) {
+                console.error('Error fetching profiles:', profilesError);
+                // Continue without profiles if error, but log it
+            }
+
+            // 3. Merge Data
+            const requestsWithProfiles = requestsData.map(req => {
+                const profile = profilesData?.find(p => p.id === req.user_id);
+                return {
+                    ...req,
+                    profiles: profile ? {
+                        full_name: profile.full_name,
+                        email: profile.email,
+                        phone: profile.phone
+                    } : undefined
+                };
+            });
+
+            setRequests(requestsWithProfiles);
         } catch (error) {
             console.error('Error fetching online requests:', error);
             toast.error('Failed to load online requests');
@@ -88,7 +120,7 @@ const OnlineRequests: React.FC<OnlineRequestsProps> = ({ onApprove }) => {
                                         {new Date(req.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="p-4 text-sm text-gray-500 font-mono text-xs">
-                                        {req.user_id}
+                                        {(req as any).profiles?.full_name || (req as any).profiles?.email || req.user_id}
                                     </td>
                                     <td className="p-4 text-sm text-gray-900 font-medium">
                                         {req.item_description}
