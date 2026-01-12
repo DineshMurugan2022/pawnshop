@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslations from './locales/en.json';
 import taTranslations from './locales/ta.json';
+import hiTranslations from './locales/hi.json';
 
 i18n
   .use(LanguageDetector) // Detects user language
@@ -14,6 +15,9 @@ i18n
       },
       ta: {
         translation: taTranslations,
+      },
+      hi: {
+        translation: hiTranslations,
       },
     },
     fallbackLng: 'en', // Default language
