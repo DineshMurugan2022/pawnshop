@@ -71,6 +71,8 @@ const Jewelry: React.FC = () => {
     return calculateProductPrice(item.weight, item.metal_type, item.wastage_percent, item.price, item.name).totalPrice;
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const filteredItems = jewelryItems
     .filter(item => {
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
@@ -79,8 +81,10 @@ const Jewelry: React.FC = () => {
       const matchesPurity = selectedPurity === 'all' ||
         (selectedPurity === '24k' && (item.name || '').toLowerCase().includes('24k')) ||
         (selectedPurity === '22k' && !(item.name || '').toLowerCase().includes('24k') && item.metal_type === 'gold');
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.description || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesCategory && matchesPrice && matchesPurity;
+      return matchesCategory && matchesPrice && matchesPurity && matchesSearch;
     })
     .sort((a, b) => {
       const priceA = getDynamicPrice(a);
@@ -185,9 +189,22 @@ const Jewelry: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex flex-wrap gap-4 items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex-1">
+            {/* Search Bar */}
+            <div className="flex-1 min-w-[200px]">
+              <input
+                type="text"
+                placeholder="Search jewelry..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 text-sm font-medium text-gray-900 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-200 border border-transparent focus:border-purple-300"
+              />
+            </div>
+
+            <div className="h-8 w-[1px] bg-gray-200 hidden md:block"></div>
+
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Purity:</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2 hidden lg:inline">Purity:</span>
               <select
                 value={selectedPurity}
                 onChange={(e) => setSelectedPurity(e.target.value)}
@@ -200,7 +217,7 @@ const Jewelry: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Price:</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2 hidden lg:inline">Price:</span>
               <select
                 value={`${priceRange[0]}-${priceRange[1]}`}
                 onChange={(e) => {
@@ -220,17 +237,32 @@ const Jewelry: React.FC = () => {
             <div className="h-8 w-[1px] bg-gray-200 mx-2 hidden md:block"></div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Sort:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="bg-transparent text-sm font-bold text-purple-700 focus:outline-none cursor-pointer pr-2"
               >
-                <option value="newest">Newest Arrivals</option>
+                <option value="newest">Newest</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
               </select>
             </div>
+
+            {/* Reset Button */}
+            {(searchQuery || selectedCategory !== 'all' || selectedPurity !== 'all' || priceRange[1] !== 1000000) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                  setSelectedPurity('all');
+                  setPriceRange([0, 1000000]);
+                  setSortBy('newest');
+                }}
+                className="text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-wider px-2"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
 

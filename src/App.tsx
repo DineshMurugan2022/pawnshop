@@ -1,45 +1,56 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Jewelry from './pages/Jewelry';
-import Pawn from './pages/Pawn';
-import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import AuthCallback from './pages/AuthCallback';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { WhatsAppButton } from './components/WhatsAppButton';
 
+// Lazy Load Pages
+const Jewelry = lazy(() => import('./pages/Jewelry'));
+const Pawn = lazy(() => import('./pages/Pawn'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+  </div>
+);
+
 function AppContent() {
   const location = useLocation();
-  const showNavbar = !['/login', '/auth/callback', '/admin/login'].includes(location.pathname);
+  const showNavbar = !['/login', '/auth/callback'].includes(location.pathname) && !location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen bg-gray-50">
       {showNavbar && <Navbar />}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/jewelry" element={<Jewelry />} />
-        <Route path="/pawn" element={<Pawn />} />
-        <Route
-          path="/admin/login"
-          element={<AdminLogin />}
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-      </Routes>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/jewelry" element={<Jewelry />} />
+          <Route path="/pawn" element={<Pawn />} />
+          <Route
+            path="/admin/login"
+            element={<AdminLogin />}
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </Suspense>
       <WhatsAppButton />
     </div>
   );

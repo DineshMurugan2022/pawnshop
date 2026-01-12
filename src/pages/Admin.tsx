@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Database, Users, FileText, Building2,
-  DollarSign, BarChart3, Settings, TrendingUp, TrendingDown,
-  Gem, Plus, Edit2, Save, LogOut, X
+  DollarSign, BarChart3, Settings, TrendingUp,
+  Gem, Plus, LogOut
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getDashboardStats, getCurrentMetalRates, updateMetalRate } from '../services/pawnshopService';
+import { getDashboardStats } from '../services/transactionService';
 import type { DashboardStats } from '../types/pawnshop';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '../utils/toast';
 import { LanguageSwitcherDropdown } from '../components/LanguageSwitcher';
+import MetalRateWidget from '../components/admin/MetalRateWidget';
 
 // Import section components (we'll create these)
 import MasterSection from '../components/admin/MasterSection';
@@ -20,8 +21,9 @@ import BankSection from '../components/admin/BankSection';
 import AccountsSection from '../components/admin/AccountsSection';
 import ReportsSection from '../components/admin/ReportsSection';
 import OnlineRequests from '../components/admin/OnlineRequests';
+import UserSection from '../components/admin/UserSection';
 
-type TabType = 'dashboard' | 'master' | 'customer' | 'transaction' | 'bank' | 'accounts' | 'reports' | 'online_requests';
+type TabType = 'dashboard' | 'master' | 'customer' | 'users' | 'transaction' | 'bank' | 'accounts' | 'reports' | 'online_requests';
 
 const PawnshopAdmin: React.FC = () => {
   const { t } = useTranslation();
@@ -29,11 +31,6 @@ const PawnshopAdmin: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [goldRate, setGoldRate] = useState(0);
-  const [silverRate, setSilverRate] = useState(0);
-  const [editingRates, setEditingRates] = useState(false);
-  const [tempGoldRate, setTempGoldRate] = useState(0);
-  const [tempSilverRate, setTempSilverRate] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // State for handling online request approvals
@@ -56,16 +53,9 @@ const PawnshopAdmin: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [dashboardData, rates] = await Promise.all([
-        getDashboardStats(),
-        getCurrentMetalRates()
-      ]);
+      const dashboardData = await getDashboardStats();
 
       setStats(dashboardData);
-      setGoldRate(rates.gold);
-      setSilverRate(rates.silver);
-      setTempGoldRate(rates.gold);
-      setTempSilverRate(rates.silver);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -73,22 +63,7 @@ const PawnshopAdmin: React.FC = () => {
     }
   };
 
-  const handleSaveRates = async () => {
-    try {
-      await Promise.all([
-        updateMetalRate('gold', tempGoldRate),
-        updateMetalRate('silver', tempSilverRate)
-      ]);
-      setGoldRate(tempGoldRate);
-      setSilverRate(tempSilverRate);
-      setEditingRates(false);
-      await loadDashboardData();
-      toast.success(t('messages.ratesUpdated'));
-    } catch (error) {
-      console.error('Error updating rates:', error);
-      toast.error(t('messages.ratesUpdateFailed'));
-    }
-  };
+
 
   const tabs = [
     { id: 'dashboard' as TabType, label: t('admin.dashboard'), icon: LayoutDashboard },
@@ -99,6 +74,7 @@ const PawnshopAdmin: React.FC = () => {
     { id: 'bank' as TabType, label: t('admin.bank'), icon: Building2 },
     { id: 'accounts' as TabType, label: t('admin.accounts'), icon: DollarSign },
     { id: 'reports' as TabType, label: t('admin.reports'), icon: BarChart3 },
+    { id: 'users' as TabType, label: 'Users', icon: Users },
   ];
 
   if (loading) {
@@ -146,75 +122,7 @@ const PawnshopAdmin: React.FC = () => {
             </div>
 
             {/* Metal Rates Display */}
-            <div className="flex items-center space-x-6">
-              <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-6 py-3 rounded-lg shadow-lg">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5" />
-                  <div>
-                    <p className="text-xs opacity-90">Gold Rate</p>
-                    {editingRates ? (
-                      <input
-                        type="number"
-                        value={tempGoldRate}
-                        onChange={(e) => setTempGoldRate(Number(e.target.value))}
-                        className="w-24 bg-white text-gray-900 px-2 py-1 rounded text-sm font-bold"
-                      />
-                    ) : (
-                      <p className="text-lg font-bold">₹{goldRate.toLocaleString()}/g</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-400 to-gray-600 text-white px-6 py-3 rounded-lg shadow-lg">
-                <div className="flex items-center space-x-2">
-                  <TrendingDown className="h-5 w-5" />
-                  <div>
-                    <p className="text-xs opacity-90">{t('admin.silverRate')}</p>
-                    {editingRates ? (
-                      <input
-                        type="number"
-                        value={tempSilverRate}
-                        onChange={(e) => setTempSilverRate(Number(e.target.value))}
-                        className="w-24 bg-white text-gray-900 px-2 py-1 rounded text-sm font-bold"
-                      />
-                    ) : (
-                      <p className="text-lg font-bold">₹{silverRate.toLocaleString()}/g</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {editingRates ? (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleSaveRates}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Save</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingRates(false);
-                      setTempGoldRate(goldRate);
-                      setTempSilverRate(silverRate);
-                    }}
-                    className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setEditingRates(true)}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center space-x-2"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  <span>{t('admin.editRates')}</span>
-                </button>
-              )}
-            </div>
+            <MetalRateWidget onRatesUpdated={loadDashboardData} />
           </div>
         </div>
       </div>
@@ -368,6 +276,7 @@ const PawnshopAdmin: React.FC = () => {
         )}
 
         {activeTab === 'master' && <MasterSection />}
+        {activeTab === 'users' && <UserSection />}
         {activeTab === 'customer' && <CustomerSection />}
         {activeTab === 'transaction' && <TransactionSection initialPawnRequest={selectedPawnRequest} />}
         {activeTab === 'bank' && <BankSection />}
@@ -379,7 +288,7 @@ const PawnshopAdmin: React.FC = () => {
           toast.info(`Reviewing request for ${req.item_description}`);
         }} />}
       </div>
-    </div>
+    </div >
   );
 };
 

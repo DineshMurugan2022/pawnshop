@@ -42,17 +42,20 @@ const Profile: React.FC = () => {
                 return;
             }
 
+            // Determine table based on role
+            const role = user.user_metadata?.role;
+            const table = ['admin', 'manager', 'staff'].includes(role) ? 'app_users' : 'customers';
+
             // Fetch profile data
             const { data, error } = await supabase
-                .from('profiles')
+                .from(table)
                 .select('*')
                 .eq('id', user.id)
                 .single();
 
             if (error) {
-                // If profile doesn't exist (should be fixed by SQL script, but handle gracefully)
                 if (error.code === 'PGRST116') {
-                    // Profile missing, just show user email
+                    // Profile missing
                 } else {
                     console.error('Error fetching profile:', error);
                 }
@@ -69,7 +72,6 @@ const Profile: React.FC = () => {
                     pincode: data.pincode || ''
                 });
             } else {
-                // Fallback if no profile data but user exists
                 setFormData(prev => ({ ...prev, full_name: user.user_metadata?.full_name || '' }));
             }
         } catch (error) {
@@ -92,14 +94,31 @@ const Profile: React.FC = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const updates = {
+            const role = user.user_metadata?.role;
+            const table = ['admin', 'manager', 'staff'].includes(role) ? 'app_users' : 'customers';
+
+            // Prepare updates based on table schema
+            let updates: any = {
                 id: user.id,
-                ...formData,
+                full_name: formData.full_name,
+                phone: formData.phone,
                 updated_at: new Date().toISOString(),
             };
 
+            if (table === 'app_users') {
+                // app_users only has address field
+                updates.address = formData.address;
+                // Append city/state/zip to address if needed, or just ignore for now as field isn't there
+            } else {
+                // customers has all fields
+                updates.address = formData.address;
+                updates.city = formData.city;
+                updates.state = formData.state;
+                updates.pincode = formData.pincode;
+            }
+
             const { error } = await supabase
-                .from('profiles')
+                .from(table)
                 .upsert(updates);
 
             if (error) throw error;

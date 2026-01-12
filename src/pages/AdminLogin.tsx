@@ -9,20 +9,26 @@ export default function AdminLogin() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, isAuthenticated } = useAuth();
-  
+  const { signIn, isAuthenticated, user } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated AND is admin
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = (location.state as any)?.from?.pathname || '/admin';
-      navigate(from, { replace: true });
+    if (isAuthenticated && user) {
+      const userRole = user.user_metadata?.role;
+      const isAdmin = userRole === 'admin' || userRole === 'manager' || user.email === (import.meta.env.VITE_ADMIN_EMAIL || '2002dineshmurugan@gmail.com');
+
+      if (isAdmin) {
+        const from = (location.state as any)?.from?.pathname || '/admin';
+        navigate(from, { replace: true });
+      }
+      // If not admin, stay here to allow login as admin
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, user, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +118,7 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                  placeholder="admin@example.com"
+                  placeholder="2002dineshmurugan@gmail.com"
                   disabled={loading}
                 />
               </div>
@@ -145,9 +151,8 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors ${
-                  loading ? 'opacity-75 cursor-not-allowed' : ''
-                }`}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors ${loading ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
               >
                 {loading ? (
                   <span className="flex items-center">

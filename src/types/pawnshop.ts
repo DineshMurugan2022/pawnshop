@@ -89,6 +89,19 @@ export interface AppUser {
     role: 'admin' | 'manager' | 'staff';
     email?: string;
     phone?: string;
+    // Enhanced fields
+    designation?: string;
+    qualification?: string;
+    date_of_birth?: string;
+    gender?: 'male' | 'female' | 'other';
+    address?: string;
+    id_proof_type?: string;
+    id_proof_number?: string;
+    bank_name?: string;
+    account_number?: string;
+    ifsc_code?: string;
+    photo_url?: string;
+    is_blocked?: boolean;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -112,6 +125,11 @@ export interface Customer {
     id_proof_type?: 'aadhar' | 'pan' | 'voter_id' | 'passport' | 'driving_license';
     id_proof_number?: string;
     photo_url?: string;
+    // Nominee Details
+    nominee_name?: string;
+    nominee_relation?: string;
+    nominee_contact?: string;
+    nominee_id_proof?: string;
     username?: string;
     password_hash?: string;
     is_active: boolean;
@@ -146,6 +164,7 @@ export interface Pledge {
     interest_type: 'monthly' | 'annual' | 'daily';
     redemption_date?: string;
     status: 'active' | 'partially_paid' | 'closed' | 'sold' | 'bank_pledged';
+    document_charges?: number; // Added Phase 2
     notes?: string;
     created_by?: string;
     created_at: string;
@@ -309,6 +328,7 @@ export interface PledgeFormData {
     loan_amount: number;
     interest_rate: number;
     interest_type: 'monthly' | 'annual' | 'daily';
+    document_charges?: number;
     pledge_number?: string; // New: Custom bill number
     notes?: string;
     items: PledgeItemFormData[];
@@ -340,11 +360,84 @@ export interface CustomerFormData {
     id_proof_type?: 'aadhar' | 'pan' | 'voter_id' | 'passport' | 'driving_license';
     id_proof_number?: string;
     photo_url?: string;
+    nominee_name?: string;
+    nominee_relation?: string;
+    nominee_contact?: string;
+    nominee_id_proof?: string;
     username?: string;
     password?: string;
 }
 
 // Report Types
+export interface DayBookRow {
+    date: string;
+    particulars: string;
+    credit: number;
+    debit: number;
+    balance: number;
+}
+
+export interface InterestPendingRow {
+    bill_no: string;
+    date: string;
+    customer_name: string;
+    mobile: string;
+    interest_rate: number;
+    months_due: number;
+    net_weight: string;
+    loan_amount: number;
+    interest_amount: string;
+    total_due: string;
+}
+
+export interface InterestCollectionRow {
+    bill_no: string;
+    date: string;
+    customer_name: string;
+    interest_collected: number;
+    type: 'Part Payment' | 'Final Settlement';
+}
+
+export interface CustomerPledgeReportRow {
+    bill_no: string;
+    date: string;
+    customer_name: string;
+    mobile: string;
+    net_weight: string | number;
+    amount: number; // Loan Amount
+    status: string;
+    type: string; // New, In Bank, Active, etc.
+}
+
+export interface PledgeReturnRow {
+    bill_no: string;
+    return_date: string;
+    customer_name: string;
+    mobile: string;
+    net_weight: string;
+    loan_amount: number;
+    received_amount: number;
+    status: string;
+}
+
+export interface BankPledgeRow {
+    // Defines structure for bank pledge report
+    bank_name: string;
+    pledge_number: string;
+    loan_amount: number;
+    amount_received: number;
+    sent_date: string;
+    status: string;
+}
+
+export interface PledgeSaleRow {
+    pledge_number: string;
+    loan_amount: number;
+    sale_amount: number;
+    sale_date: string;
+    buyer_name: string;
+}
+
 export interface DetailReportRow {
     pledge_number: string;
     pledge_date: string;
@@ -355,15 +448,6 @@ export interface DetailReportRow {
     total_paid: number;
     outstanding: number;
     status: string;
-}
-
-export interface CustomerPledgeReportRow {
-    customer_code: string;
-    customer_name: string;
-    total_pledges: number;
-    total_loan_amount: number;
-    total_outstanding: number;
-    last_pledge_date: string;
 }
 
 // Order Types

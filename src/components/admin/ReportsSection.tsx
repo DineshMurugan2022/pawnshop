@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
-import { BarChart3, FileText, Download, Loader2 } from 'lucide-react';
-import { getDetailReport, getCustomerPledgeReport, getBankPledgeReport, getPledgeSalesReport } from '../../services/reportService';
+import { BarChart3, FileText, Download, Loader2, DollarSign, TrendingUp } from 'lucide-react';
+import {
+    getDayBookReport,
+    getCustomerPledgeReport,
+    getBankPledgeReport,
+    getPledgeSalesReport,
+    getInterestPendingReport,
+    getInterestCollectionReport
+} from '../../services/reportService';
 import { toast } from '../../utils/toast';
 
 const ReportsSection: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [activeReport, setActiveReport] = useState<string | null>(null);
     const [reportData, setReportData] = useState<any[]>([]);
+    const [subTab, setSubTab] = useState<'new_pledge' | 'pledge_return' | 'in_bank' | 'non_return' | 'pledge_sales'>('new_pledge');
 
     // Default to current month
     const today = new Date();
@@ -18,25 +26,37 @@ const ReportsSection: React.FC = () => {
     });
 
     const reports = [
-        { id: 'detail', name: 'Detail Report', description: 'Comprehensive transaction details', icon: FileText },
-        { id: 'customer_pledge', name: 'Customer Pledge Report', description: 'Customer-wise pledge summary', icon: BarChart3 },
-        { id: 'bank_pledge', name: 'Bank Pledge Report', description: 'Bank pledge tracking', icon: FileText },
-        { id: 'pledge_sales', name: 'Pledge Sales Report', description: 'Sales report for unredeemed items', icon: BarChart3 },
+        { id: 'day_book', name: 'Detail Report (Day Book)', description: 'Daily Transactions & Cash Flow', icon: FileText },
+        { id: 'interest_pending', name: 'Interest Pending', description: 'Due interest on active pledges', icon: TrendingUp },
+        { id: 'interest_collection', name: 'Interest Collection', description: 'Interest collected history', icon: DollarSign },
+        { id: 'bank_pledge', name: 'Bank Pledge Report', description: 'Items currently in bank', icon: FileText },
+        { id: 'customer_pledge', name: 'Customer History', description: 'Customer-wise pledge summary', icon: BarChart3 },
+        { id: 'pledge_sales', name: 'Unredeemed Sales', description: 'Sales report', icon: BarChart3 },
     ];
 
-    const handleViewReport = async (reportId: string) => {
+    const handleViewReport = async (reportId: string, overrideSubTab?: string) => {
         setLoading(true);
         setActiveReport(reportId);
-        setReportData([]);
+        // Don't clear data immediately if switching subtabs to avoid flicker, or do if preferred.
+        if (!overrideSubTab) setReportData([]);
 
         try {
             let data: any[] = [];
+            const currentSubTab = overrideSubTab || subTab;
+
             switch (reportId) {
-                case 'detail':
-                    data = await getDetailReport(dateRange);
+                case 'day_book':
+                    data = await getDayBookReport(dateRange);
+                    break;
+                case 'interest_pending':
+                    data = await getInterestPendingReport(dateRange);
+                    break;
+                case 'interest_collection':
+                    data = await getInterestCollectionReport(dateRange);
                     break;
                 case 'customer_pledge':
-                    data = await getCustomerPledgeReport(dateRange);
+                    // Pass the subTab (either from state or override)
+                    data = await getCustomerPledgeReport(dateRange, currentSubTab);
                     break;
                 case 'bank_pledge':
                     data = await getBankPledgeReport(dateRange);
@@ -55,6 +75,11 @@ const ReportsSection: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSubTabChange = (newTab: any) => {
+        setSubTab(newTab);
+        handleViewReport('customer_pledge', newTab);
     };
 
     const handleExport = () => {
@@ -149,6 +174,32 @@ const ReportsSection: React.FC = () => {
                     );
                 })}
             </div>
+
+            {/* Sub-tabs for Customer History Report */}
+            {activeReport === 'customer_pledge' && (
+                <div className="bg-white rounded-lg shadow-md p-2">
+                    <div className="flex space-x-1 overflow-x-auto p-2">
+                        {[
+                            { id: 'new_pledge', label: 'New Pledge' },
+                            { id: 'pledge_return', label: 'Return Pledge' },
+                            { id: 'in_bank', label: 'In Bank Pledge' },
+                            { id: 'non_return', label: 'Non Return' },
+                            { id: 'pledge_sales', label: 'Pledge Sales' },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => handleSubTabChange(tab.id)}
+                                className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${subTab === tab.id
+                                        ? 'bg-purple-100 text-purple-700'
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                    }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Results Table */}
             {activeReport && reportData.length > 0 && (

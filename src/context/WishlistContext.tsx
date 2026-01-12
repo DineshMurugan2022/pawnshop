@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from '../utils/toast';
 
 interface WishlistContextType {
     wishlist: string[]; // Store product IDs
@@ -20,11 +20,19 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const toggleWishlist = (productId: string) => {
         setWishlist(prev => {
-            const newWishlist = prev.includes(productId)
+            const isRemoving = prev.includes(productId);
+            const newWishlist = isRemoving
                 ? prev.filter(id => id !== productId)
                 : [...prev, productId];
 
             localStorage.setItem('wishlist', JSON.stringify(newWishlist));
+
+            if (isRemoving) {
+                toast.info("Removed from Wishlist");
+            } else {
+                toast.success("Added to Wishlist");
+            }
+
             return newWishlist;
         });
     };

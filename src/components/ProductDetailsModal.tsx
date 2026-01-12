@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Scale, Info, ShoppingCart } from 'lucide-react';
+import { X, Scale, Info, ShoppingCart, Heart } from 'lucide-react';
 import { JewelryItem } from '../lib/supabase';
 import { useRates } from '../context/RateContext';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 interface ProductDetailsModalProps {
     item: JewelryItem | null;
@@ -13,6 +14,7 @@ interface ProductDetailsModalProps {
 export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ item, isOpen, onClose }) => {
     const { calculateProductPrice } = useRates();
     const { addToCart } = useCart();
+    const { toggleWishlist, isInWishlist } = useWishlist();
     const [selectedWeight, setSelectedWeight] = useState<number>(0);
     const [customWeight, setCustomWeight] = useState<string>('');
     const [isCustom, setIsCustom] = useState(false);
@@ -64,9 +66,21 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ item, 
                             </span>
                             <h2 className="text-2xl font-bold text-gray-900 leading-tight">{item.name}</h2>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                            <X className="h-6 w-6 text-gray-400" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => item && toggleWishlist(item.id)}
+                                className={`p-2 rounded-full transition-colors ${item && isInWishlist(item.id)
+                                    ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                                    : 'hover:bg-gray-100 text-gray-400 hover:text-red-500'
+                                    }`}
+                                title={item && isInWishlist(item.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                            >
+                                <Heart className={`h-6 w-6 ${item && isInWishlist(item.id) ? 'fill-current' : ''}`} />
+                            </button>
+                            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                <X className="h-6 w-6 text-gray-400" />
+                            </button>
+                        </div>
                     </div>
 
                     <p className="text-gray-600 mb-6">{item.description}</p>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Gem, Scale, LogOut, User, Settings, ShoppingBag, Heart } from 'lucide-react';
+import { Gem, Scale, LogOut, User, ShoppingBag, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CartDrawer } from './CartDrawer';
 import { WishlistDrawer } from './WishlistDrawer';
@@ -77,12 +77,7 @@ export default function Navbar() {
               <Scale className="h-5 w-5 mr-1" />
               Pawn
             </Link>
-            {user && user.email === 'admin@example.com' && (
-              <Link to="/admin" className="hover:text-purple-200 flex items-center">
-                <Settings className="h-5 w-5 mr-1" />
-                Admin
-              </Link>
-            )}
+            {/* Admin Link Removed - Admins must login via /admin/login */}
           </div>
         </div>
         <div className="flex items-center space-x-4">

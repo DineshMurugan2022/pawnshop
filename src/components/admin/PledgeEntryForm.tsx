@@ -42,6 +42,7 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, 
         loan_amount: 0,
         interest_rate: 0,
         interest_type: 'monthly' as 'monthly' | 'annual' | 'daily',
+        document_charges: 0,
         notes: '',
         items: [] as PledgeItemFormData[]
     });
@@ -163,7 +164,8 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, 
                     net_weight_grams: 0,
                     purity: '',
                     quantity: 1,
-                    item_value: 0
+                    item_value: 0,
+                    purity_test_value: '' // Initialize
                 }
             ]
         }));
@@ -253,6 +255,7 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, 
                 loan_amount: formData.loan_amount,
                 interest_rate: formData.interest_rate,
                 interest_type: formData.interest_type,
+                document_charges: formData.document_charges,
                 pledge_number: generatedPledgeNo, // Using the custom generated number
                 notes: formData.notes || undefined,
                 items: formData.items
@@ -273,6 +276,7 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, 
                 loan_amount: 0,
                 interest_rate: 0,
                 interest_type: 'monthly',
+                document_charges: 0,
                 notes: '',
                 items: []
             });
@@ -586,6 +590,18 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, 
                     </select>
                 </div>
 
+                {/* Document Charges */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Document Charges (DC)</label>
+                    <input
+                        type="number"
+                        min="0"
+                        value={formData.document_charges || 0}
+                        onChange={(e) => setFormData(prev => ({ ...prev, document_charges: parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                </div>
+
                 {/* Notes */}
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
@@ -730,6 +746,18 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, 
                                         value={item.purity || ''}
                                         onChange={(e) => updateItem(index, 'purity', e.target.value || undefined)}
                                         placeholder="e.g., 22K, 18K"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    />
+                                </div>
+
+                                {/* Touch / Purity Test (Phase 2) */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Touch / Test</label>
+                                    <input
+                                        type="text"
+                                        value={item.purity_test_value || ''}
+                                        onChange={(e) => updateItem(index, 'purity_test_value', e.target.value)}
+                                        placeholder="e.g. 916, 75"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     />
                                 </div>

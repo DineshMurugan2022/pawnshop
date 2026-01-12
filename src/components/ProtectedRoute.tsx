@@ -7,9 +7,9 @@ interface ProtectedRouteProps {
   requireAdmin?: boolean;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requireAdmin = false 
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requireAdmin = false
 }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -33,11 +33,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // If admin access is required, you can add role checking here
   // For now, any authenticated user can access admin
   // TODO: Implement role-based access control
+  // Check for admin access
   if (requireAdmin && user) {
-    // Check if user is admin (you can extend this logic based on your user metadata)
-    const userRole = user.user_metadata?.role || user.email;
-    // This is a simple check - you may want to check against a users table
-    // For now, we'll allow any authenticated user
+    // Use env variable or fallback (though fallback is risky for security, we'll strip it in next step if desired, but for now just use the var)
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || '2002dineshmurugan@gmail.com';
+
+    // STRICT: Only allow this specific email
+    if (user.email !== adminEmail) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;

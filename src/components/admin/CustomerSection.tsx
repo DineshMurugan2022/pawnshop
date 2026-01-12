@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Eye, Edit2, User } from 'lucide-react';
+import { Plus, Search, Eye, Edit2, User, Camera, Loader } from 'lucide-react';
 import { getCustomers, createCustomer, updateCustomer } from '../../services/pawnshopService';
 import type { Customer, CustomerFormData } from '../../types/pawnshop';
 import { toast } from '../../utils/toast';
+import { supabase } from '../../lib/supabase';
 
 const CustomerSection: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -19,7 +20,13 @@ const CustomerSection: React.FC = () => {
         state: '',
         pincode: '',
         id_proof_type: 'aadhar',
-        id_proof_number: ''
+        id_proof_number: '',
+        photo_url: '',
+        // Nominee
+        nominee_name: '',
+        nominee_relation: '',
+        nominee_contact: '',
+        nominee_id_proof: ''
     });
 
     useEffect(() => {
@@ -67,10 +74,44 @@ const CustomerSection: React.FC = () => {
             state: '',
             pincode: '',
             id_proof_type: 'aadhar',
-            id_proof_number: ''
+            id_proof_number: '',
+            nominee_name: '',
+            nominee_relation: '',
+            nominee_contact: '',
+            nominee_id_proof: ''
         });
+        setLoading(false);
         setShowForm(false);
         setEditingCustomer(null);
+    };
+
+    const [loading, setLoading] = useState(false);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setLoading(true);
+            const fileExt = file.name.split('.').pop();
+            const fileName = `cust-${Math.random()}.${fileExt}`;
+            const filePath = `customer-photos/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('documents')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
+            setFormData(prev => ({ ...prev, photo_url: data.publicUrl }));
+            toast.success('Photo uploaded');
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            toast.error('Failed to upload photo');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const startEdit = (customer: Customer) => {
@@ -84,7 +125,12 @@ const CustomerSection: React.FC = () => {
             state: customer.state || '',
             pincode: customer.pincode || '',
             id_proof_type: customer.id_proof_type || 'aadhar',
-            id_proof_number: customer.id_proof_number || ''
+            id_proof_number: customer.id_proof_number || '',
+            photo_url: customer.photo_url || '',
+            nominee_name: customer.nominee_name || '',
+            nominee_relation: customer.nominee_relation || '',
+            nominee_contact: customer.nominee_contact || '',
+            nominee_id_proof: customer.nominee_id_proof || ''
         });
         setEditingCustomer(customer);
         setShowForm(true);
@@ -132,118 +178,139 @@ const CustomerSection: React.FC = () => {
                     <h3 className="text-xl font-bold text-gray-900 mb-4">
                         {editingCustomer ? 'Edit Customer' : 'Add New Customer'}
                     </h3>
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                            <input
-                                type="text"
-                                value={formData.full_name}
-                                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                required
-                            />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Photo Upload */}
+                        <div className="flex justify-center mb-6">
+                            <div className="relative">
+                                <div className="h-32 w-32 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                                    {formData.photo_url ? (
+                                        <img src={formData.photo_url} alt="Customer" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <User className="h-16 w-16 text-gray-400" />
+                                    )}
+                                </div>
+                                <label className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full cursor-pointer hover:bg-purple-700 shadow-lg">
+                                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={loading} />
+                                    {loading ? <Loader className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                                </label>
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Father's Name</label>
-                            <input
-                                type="text"
-                                value={formData.father_name}
-                                onChange={(e) => setFormData({ ...formData, father_name: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                <input
+                                    type="text"
+                                    value={formData.full_name}
+                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Father's Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.father_name}
+                                    onChange={(e) => setFormData({ ...formData, father_name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                                <input
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                                <textarea
+                                    value={formData.address}
+                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                    rows={2}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                <input
+                                    type="text"
+                                    value={formData.city}
+                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                <input
+                                    type="text"
+                                    value={formData.state}
+                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Type</label>
+                                <select
+                                    value={formData.id_proof_type}
+                                    onChange={(e) => setFormData({ ...formData, id_proof_type: e.target.value as any })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option value="aadhar">Aadhar Card</option>
+                                    <option value="pan">PAN Card</option>
+                                    <option value="voter_id">Voter ID</option>
+                                    <option value="passport">Passport</option>
+                                    <option value="driving_license">Driving License</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Number</label>
+                                <input
+                                    type="text"
+                                    value={formData.id_proof_number}
+                                    onChange={(e) => setFormData({ ...formData, id_proof_number: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                            <input
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
-                        </div>
-
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-                            <textarea
-                                value={formData.address}
-                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                            <input
-                                type="text"
-                                value={formData.city}
-                                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                            <input
-                                type="text"
-                                value={formData.state}
-                                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Type</label>
-                            <select
-                                value={formData.id_proof_type}
-                                onChange={(e) => setFormData({ ...formData, id_proof_type: e.target.value as any })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            >
-                                <option value="aadhar">Aadhar Card</option>
-                                <option value="pan">PAN Card</option>
-                                <option value="voter_id">Voter ID</option>
-                                <option value="passport">Passport</option>
-                                <option value="driving_license">Driving License</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Number</label>
-                            <input
-                                type="text"
-                                value={formData.id_proof_number}
-                                onChange={(e) => setFormData({ ...formData, id_proof_number: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            />
-                        </div>
-
-                        <div className="md:col-span-2 flex space-x-2">
-                            <button
-                                type="submit"
-                                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
-                            >
-                                {editingCustomer ? 'Update Customer' : 'Add Customer'}
-                            </button>
+                        <div className="flex justify-end space-x-2 pt-4 border-t">
                             <button
                                 type="button"
                                 onClick={resetForm}
-                                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400"
+                                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300"
                             >
                                 Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                            >
+                                {editingCustomer ? 'Update Customer' : 'Add Customer'}
                             </button>
                         </div>
                     </form>
