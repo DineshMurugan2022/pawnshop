@@ -112,7 +112,7 @@ export default function Navbar() {
             user ? (
               <div className="flex items-center space-x-4">
                 <Link
-                  to="/dashboard"
+                  to="/profile"
                   className="flex items-center space-x-2 text-purple-200 hover:text-white transition-colors group"
                 >
                   <div className="h-8 w-8 rounded-full bg-purple-700 flex items-center justify-center font-bold text-sm border border-purple-600 group-hover:border-white transition-all">

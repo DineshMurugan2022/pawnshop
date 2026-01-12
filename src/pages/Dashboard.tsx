@@ -1,44 +1,44 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ShoppingBag, Scale, Clock, CheckCircle2, Package, ArrowRight, User as UserIcon } from 'lucide-react';
+import { ShoppingBag, Scale, Clock, CheckCircle2, Package, ArrowRight, User as UserIcon, XCircle } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
-
-interface Order {
-    id: string;
-    date: string;
-    total: number;
-    status: 'processing' | 'shipped' | 'delivered';
-    items: string[];
-}
-
-interface PawnRequest {
-    id: string;
-    date: string;
-    item: string;
-    amount: number;
-    status: 'pending' | 'approved' | 'rejected';
-}
+import type { Order } from '../types/pawnshop';
+import { PawnRequest } from '../lib/supabase';
 
 export default function Dashboard() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-
-    // Mock data - In a real app, these would come from Supabase 'orders' and 'pawn_requests' tables
-    const [orders] = useState<Order[]>([
-        { id: 'ORD-7721', date: '2025-12-28', total: 64500, status: 'shipped', items: ['24K Gold Coin (10g)'] },
-        { id: 'ORD-7604', date: '2025-12-15', total: 12800, status: 'delivered', items: ['Sterling Silver Chain'] }
-    ]);
-
-    const [pawns] = useState<PawnRequest[]>([
-        { id: 'PWN-001', date: '2025-12-30', item: 'Antique Gold Bangle (22g)', amount: 85000, status: 'pending' },
-        { id: 'PWN-002', date: '2024-11-20', item: 'Diamond Ring (1.5ct)', amount: 150000, status: 'approved' }
-    ]);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [pawns, setPawns] = useState<PawnRequest[]>([]);
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }) => {
+        const fetchUserData = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
+
+            if (user) {
+                // Fetch Orders
+                const { data: ordersData } = await supabase
+                    .from('orders')
+                    .select('*, items:order_items(*)')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                if (ordersData) setOrders(ordersData);
+
+                // Fetch Pawn Requests
+                const { data: pawnData } = await supabase
+                    .from('pawn_requests')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                if (pawnData) setPawns(pawnData);
+            }
             setLoading(false);
-        });
+        };
+
+        fetchUserData();
     }, []);
 
     const getStatusColor = (status: string) => {
@@ -46,7 +46,7 @@ export default function Dashboard() {
             case 'delivered': case 'approved': return 'text-green-600 bg-green-50 border-green-100';
             case 'shipped': case 'processing': return 'text-blue-600 bg-blue-50 border-blue-100';
             case 'pending': return 'text-amber-600 bg-amber-50 border-amber-100';
-            case 'rejected': return 'text-red-600 bg-red-50 border-red-100';
+            case 'rejected': case 'cancelled': return 'text-red-600 bg-red-50 border-red-100';
             default: return 'text-gray-600 bg-gray-50 border-gray-100';
         }
     };
@@ -79,7 +79,7 @@ export default function Dashboard() {
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row items-center gap-6">
                         <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-4 border-white/10 overflow-hidden shadow-2xl">
-                            {user.email?.[0].toUpperCase()}
+                            <span className="text-3xl font-bold">{user.email?.[0].toUpperCase()}</span>
                         </div>
                         <div className="text-center md:text-left">
                             <h1 className="text-3xl font-black mb-1">Welcome back!</h1>
@@ -109,29 +109,34 @@ export default function Dashboard() {
                             <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
                                 <Package className="h-6 w-6 text-purple-600" /> Recent Orders
                             </h2>
-                            <button className="text-purple-600 font-bold text-sm hover:underline flex items-center gap-1">
-                                View All <ArrowRight className="h-4 w-4" />
-                            </button>
                         </div>
 
                         <div className="space-y-4">
-                            {orders.map(order => (
-                                <div key={order.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{order.id} • {order.date}</p>
-                                            <h3 className="font-bold text-gray-900 mt-1">{order.items.join(', ')}</h3>
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase border ${getStatusColor(order.status)}`}>
-                                            {order.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center pt-4 border-t border-gray-50">
-                                        <span className="text-sm text-gray-500 font-medium">Order Total</span>
-                                        <span className="text-lg font-black text-purple-700">₹{order.total.toLocaleString()}</span>
-                                    </div>
+                            {orders.length === 0 ? (
+                                <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
+                                    <p className="text-gray-400 font-medium">No orders found.</p>
                                 </div>
-                            ))}
+                            ) : (
+                                orders.map(order => (
+                                    <div key={order.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{order.id} • {new Date(order.created_at).toLocaleDateString()}</p>
+                                                <h3 className="font-bold text-gray-900 mt-1">
+                                                    {order.items?.map(i => i.product_name).join(', ')}
+                                                </h3>
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase border ${getStatusColor(order.status)}`}>
+                                                {order.status}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center pt-4 border-t border-gray-50">
+                                            <span className="text-sm text-gray-500 font-medium">Order Total</span>
+                                            <span className="text-lg font-black text-purple-700">₹{order.total_amount.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 
@@ -139,37 +144,43 @@ export default function Dashboard() {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-                                <Scale className="h-6 w-6 text-purple-600" /> Active Pawns
+                                <Scale className="h-6 w-6 text-purple-600" /> My Pawn Requests
                             </h2>
-                            <button className="text-purple-600 font-bold text-sm hover:underline flex items-center gap-1">
+                            <a href="/pawn" className="text-purple-600 font-bold text-sm hover:underline flex items-center gap-1">
                                 New Request <ArrowRight className="h-4 w-4" />
-                            </button>
+                            </a>
                         </div>
 
                         <div className="space-y-4">
-                            {pawns.map(pawn => (
-                                <div key={pawn.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{pawn.id} • {pawn.date}</p>
-                                            <h3 className="font-bold text-gray-900 mt-1">{pawn.item}</h3>
-                                        </div>
-                                        <div className={`p-2 rounded-full ${pawn.status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-                                            {pawn.status === 'approved' ? <CheckCircle2 className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
-                                        <div>
-                                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Amount Disbursed</p>
-                                            <p className="text-lg font-black text-gray-900">₹{pawn.amount.toLocaleString()}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Status</p>
-                                            <p className={`text-sm font-bold capitalize ${pawn.status === 'approved' ? 'text-green-600' : 'text-amber-600'}`}>{pawn.status}</p>
-                                        </div>
-                                    </div>
+                            {pawns.length === 0 ? (
+                                <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
+                                    <p className="text-gray-400 font-medium">No pawn requests found.</p>
                                 </div>
-                            ))}
+                            ) : (
+                                pawns.map(pawn => (
+                                    <div key={pawn.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{pawn.id.slice(0, 8)}... • {new Date(pawn.created_at).toLocaleDateString()}</p>
+                                                <h3 className="font-bold text-gray-900 mt-1">{pawn.item_description}</h3>
+                                            </div>
+                                            <div className={`p-2 rounded-full ${pawn.status === 'approved' ? 'bg-green-100 text-green-600' : pawn.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+                                                {pawn.status === 'approved' ? <CheckCircle2 className="h-5 w-5" /> : pawn.status === 'rejected' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Requested</p>
+                                                <p className="text-lg font-black text-gray-900">₹{pawn.requested_amount.toLocaleString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Status</p>
+                                                <p className={`text-sm font-bold capitalize ${pawn.status === 'approved' ? 'text-green-600' : 'text-amber-600'}`}>{pawn.status}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 

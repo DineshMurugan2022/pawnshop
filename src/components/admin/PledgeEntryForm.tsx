@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, Printer, User, AlertOctagon, ShieldAlert } from 'lucide-react';
+import { Plus, Trash2, Save, Printer, User, AlertOctagon, ShieldAlert } from 'lucide-react';
 import { createPledge, getCustomers, getLoanTypes, getSchemes, getJewelleryTypes, getPledgeById, getPledges } from '../../services/pawnshopService';
 import { generatePledgeReceipt } from '../../utils/receiptUtils';
 import { generatePledgeNumber } from '../../utils/sequenceUtils';
 import type { Customer, LoanType, Scheme, JewelleryType, PledgeItemFormData } from '../../types/pawnshop';
 import { toast } from '../../utils/toast';
-import { validateRequired, validatePositiveNumber, getValidationError } from '../../utils/validation';
+import { validateRequired, validatePositiveNumber } from '../../utils/validation';
+
+import { PawnRequest } from '../../lib/supabase';
 
 interface PledgeEntryFormProps {
     onSuccess?: () => void;
     onCancel?: () => void;
+    initialPawnRequest?: PawnRequest | null;
 }
 
 // Mock Blocked IDs for demonstration (in real app, this would be in DB)
 const BLOCKED_ID_PROOFS = ['BLOCKED123', 'FRAUD999', 'ABC1234567'];
 
-const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel }) => {
+const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel, initialPawnRequest }) => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loanTypes, setLoanTypes] = useState<LoanType[]>([]);
     const [schemes, setSchemes] = useState<Scheme[]>([]);
@@ -63,6 +66,27 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel }
             }
         }
     }, [formData.scheme_id, schemes]);
+
+    // Handle Initial Pawn Request (Online Request)
+    useEffect(() => {
+        if (initialPawnRequest) {
+            setFormData(prev => ({
+                ...prev,
+                loan_amount: initialPawnRequest.requested_amount,
+                notes: `Online Request: ${initialPawnRequest.item_description} (ID: ${initialPawnRequest.id})`,
+                items: [{
+                    item_description: initialPawnRequest.item_description,
+                    gross_weight_grams: 0,
+                    net_weight_grams: 0,
+                    quantity: 1,
+                    purity: '',
+                    item_value: 0
+                }]
+            }));
+
+            // Try to find customer if user_id exists and maps to a customer logic (omitted for now as we don't have direct mapping easily without profiles table being fully utilised in customers table)
+        }
+    }, [initialPawnRequest]);
 
     // Handle Customer Selection & Blocking Logic
     useEffect(() => {
@@ -315,9 +339,9 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel }
     }
 
     const filteredCustomers = customers.filter(customer =>
-        customer.full_name.toLowerCase().includes(searchCustomer.toLowerCase()) ||
-        customer.phone.includes(searchCustomer) ||
-        customer.customer_code?.toLowerCase().includes(searchCustomer.toLowerCase())
+        (customer.full_name || '').toLowerCase().includes(searchCustomer.toLowerCase()) ||
+        (customer.phone || '').includes(searchCustomer) ||
+        (customer.customer_code || '').toLowerCase().includes(searchCustomer.toLowerCase())
     );
 
     return (
@@ -750,8 +774,8 @@ const PledgeEntryForm: React.FC<PledgeEntryFormProps> = ({ onSuccess, onCancel }
                     type="submit"
                     disabled={loading || isCustomerBlocked}
                     className={`flex items-center space-x-2 px-6 py-2 rounded-md transition-colors ${isCustomerBlocked
-                            ? 'bg-gray-400 cursor-not-allowed text-white'
-                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-purple-600 text-white hover:bg-purple-700'
                         }`}
                 >
                     {isCustomerBlocked ? <ShieldAlert className="h-4 w-4" /> : <Save className="h-4 w-4" />}

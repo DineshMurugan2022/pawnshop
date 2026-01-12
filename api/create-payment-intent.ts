@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 
 // Initialize Stripe with the test secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
+  apiVersion: '2024-04-10',
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -46,8 +46,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: any) {
     console.error('Error creating payment intent:', err);
-    return res.status(500).json({ 
-      error: err.message || 'Error creating payment intent' 
+    return res.status(500).json({
+      error: err.message || 'Error creating payment intent'
     });
   }
 }

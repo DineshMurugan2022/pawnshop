@@ -24,6 +24,7 @@ const Jewelry: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isCartCheckout, setIsCartCheckout] = useState(false);
   const [checkoutItems, setCheckoutItems] = useState<{ name: string, price: number, weight: number, unit: string, image_url?: string }[]>([]);
   const [checkoutTotal, setCheckoutTotal] = useState(0);
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
@@ -76,8 +77,8 @@ const Jewelry: React.FC = () => {
       const price = getDynamicPrice(item);
       const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
       const matchesPurity = selectedPurity === 'all' ||
-        (selectedPurity === '24k' && item.name.toLowerCase().includes('24k')) ||
-        (selectedPurity === '22k' && !item.name.toLowerCase().includes('24k') && item.metal_type === 'gold');
+        (selectedPurity === '24k' && (item.name || '').toLowerCase().includes('24k')) ||
+        (selectedPurity === '22k' && !(item.name || '').toLowerCase().includes('24k') && item.metal_type === 'gold');
 
       return matchesCategory && matchesPrice && matchesPurity;
     })
@@ -108,6 +109,7 @@ const Jewelry: React.FC = () => {
       image_url: item.image_url || undefined
     }]);
     setCheckoutTotal(price);
+    setIsCartCheckout(false);
     setIsCheckoutOpen(true);
   };
 
@@ -127,6 +129,7 @@ const Jewelry: React.FC = () => {
 
     setCheckoutItems(items);
     setCheckoutTotal(getTotalPrice());
+    setIsCartCheckout(true);
     setIsCheckoutOpen(true);
   };
 
@@ -326,6 +329,7 @@ const Jewelry: React.FC = () => {
         onClose={() => setIsCheckoutOpen(false)}
         items={checkoutItems}
         totalAmount={checkoutTotal}
+        isCartCheckout={isCartCheckout}
       />
 
       <TrustBadges />

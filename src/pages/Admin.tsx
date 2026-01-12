@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Database, Users, FileText, Building2,
   DollarSign, BarChart3, Settings, TrendingUp, TrendingDown,
-  Gem, Plus, Edit2, Trash2, Search, X, Save, LogOut
+  Gem, Plus, Edit2, Save, LogOut, X
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getDashboardStats, getCurrentMetalRates, updateMetalRate } from '../services/pawnshopService';
@@ -19,8 +19,9 @@ import TransactionSection from '../components/admin/TransactionSection';
 import BankSection from '../components/admin/BankSection';
 import AccountsSection from '../components/admin/AccountsSection';
 import ReportsSection from '../components/admin/ReportsSection';
+import OnlineRequests from '../components/admin/OnlineRequests';
 
-type TabType = 'dashboard' | 'master' | 'customer' | 'transaction' | 'bank' | 'accounts' | 'reports';
+type TabType = 'dashboard' | 'master' | 'customer' | 'transaction' | 'bank' | 'accounts' | 'reports' | 'online_requests';
 
 const PawnshopAdmin: React.FC = () => {
   const { t } = useTranslation();
@@ -34,6 +35,9 @@ const PawnshopAdmin: React.FC = () => {
   const [tempGoldRate, setTempGoldRate] = useState(0);
   const [tempSilverRate, setTempSilverRate] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // State for handling online request approvals
+  const [selectedPawnRequest, setSelectedPawnRequest] = useState<any>(null); // Use proper type import if available
 
   const handleLogout = async () => {
     try {
@@ -88,6 +92,7 @@ const PawnshopAdmin: React.FC = () => {
 
   const tabs = [
     { id: 'dashboard' as TabType, label: t('admin.dashboard'), icon: LayoutDashboard },
+    { id: 'online_requests' as TabType, label: 'Online Requests', icon: TrendingUp },
     { id: 'master' as TabType, label: t('admin.master'), icon: Database },
     { id: 'customer' as TabType, label: t('admin.customer'), icon: Users },
     { id: 'transaction' as TabType, label: t('admin.transaction'), icon: FileText },
@@ -225,8 +230,8 @@ const PawnshopAdmin: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === tab.id
-                      ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-                      : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50'
+                    ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50'
                     }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -364,10 +369,15 @@ const PawnshopAdmin: React.FC = () => {
 
         {activeTab === 'master' && <MasterSection />}
         {activeTab === 'customer' && <CustomerSection />}
-        {activeTab === 'transaction' && <TransactionSection />}
+        {activeTab === 'transaction' && <TransactionSection initialPawnRequest={selectedPawnRequest} />}
         {activeTab === 'bank' && <BankSection />}
         {activeTab === 'accounts' && <AccountsSection />}
         {activeTab === 'reports' && <ReportsSection />}
+        {activeTab === 'online_requests' && <OnlineRequests onApprove={(req) => {
+          setSelectedPawnRequest(req);
+          setActiveTab('transaction');
+          toast.info(`Reviewing request for ${req.item_description}`);
+        }} />}
       </div>
     </div>
   );

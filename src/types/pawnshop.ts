@@ -365,3 +365,33 @@ export interface CustomerPledgeReportRow {
     total_outstanding: number;
     last_pledge_date: string;
 }
+
+// Order Types
+export interface Order {
+    id: string; // ORD-XXXX
+    user_id: string;
+    total_amount: number;
+    status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    shipping_address: {
+        fullName: string;
+        street: string;
+        city: string;
+        zipCode: string;
+        phone: string;
+    };
+    created_at: string;
+    updated_at: string;
+    items?: OrderItem[];
+}
+
+export interface OrderItem {
+    id: string;
+    order_id: string;
+    product_name: string;
+    price: number;
+    weight: number;
+    unit: string;
+    image_url?: string;
+    quantity: number;
+    created_at: string;
+}

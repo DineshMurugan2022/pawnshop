@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, Gem, MapPin, CreditCard, ChevronRight } from 'lucide-react';
 import { PaymentGateway } from './PaymentGateway';
 import { generateInvoice } from '../utils/invoiceUtils';
+import { supabase } from '../lib/supabase';
+import { useCart } from '../context/CartContext';
 
 interface CheckoutModalProps {
     isOpen: boolean;
@@ -14,6 +16,7 @@ interface CheckoutModalProps {
         image_url?: string;
     }[];
     totalAmount: number;
+    isCartCheckout?: boolean;
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
@@ -21,8 +24,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     onClose,
     items,
     totalAmount,
+    isCartCheckout = false,
 }) => {
     const [step, setStep] = useState<'address' | 'payment'>('address');
+    const { clearCart } = useCart();
     const [address, setAddress] = useState({
         fullName: '',
         street: '',
@@ -33,18 +38,63 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     if (!isOpen) return null;
 
-    const handleSuccess = (_paymentIntent: any) => {
-        // Generate and download invoice
-        generateInvoice(address.fullName, items.map(i => ({
-            name: i.name,
-            price: i.price,
-            weight: i.weight,
-            unit: i.unit
-        })), totalAmount);
+    const handleSuccess = async (paymentIntent: any) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
 
-        alert('Payment Successful! Your digital invoice has been downloaded. Thank you for your purchase.');
-        onClose();
-        setStep('address');
+            if (user) {
+                // 1. Create Order
+                const orderId = `ORD-${Date.now()}`;
+                const { error: orderError } = await supabase
+                    .from('orders')
+                    .insert({
+                        id: orderId,
+                        user_id: user.id,
+                        total_amount: totalAmount,
+                        status: 'processing',
+                        shipping_address: address,
+                        payment_intent_id: paymentIntent?.id || 'mock_payment_id'
+                    });
+
+                if (orderError) throw orderError;
+
+                // 2. Create Order Items
+                const orderItems = items.map(item => ({
+                    order_id: orderId,
+                    product_name: item.name,
+                    price: item.price,
+                    weight: item.weight,
+                    unit: item.unit,
+                    image_url: item.image_url,
+                    quantity: 1 // Assuming 1 for flattened items list, or we need quantity in items prop
+                }));
+
+                const { error: itemsError } = await supabase
+                    .from('order_items')
+                    .insert(orderItems);
+
+                if (itemsError) throw itemsError;
+            }
+
+            // Generate and download invoice
+            generateInvoice(address.fullName, items.map(i => ({
+                name: i.name,
+                price: i.price,
+                weight: i.weight,
+                unit: i.unit
+            })), totalAmount);
+
+            if (isCartCheckout) {
+                clearCart();
+            }
+
+            alert('Payment Successful! Your order has been placed and digital invoice downloaded.');
+            onClose();
+            setStep('address');
+        } catch (error: any) {
+            console.error('Order creation failed:', error);
+            alert(`Payment successful but failed to create order: ${error.message}`);
+        }
     };
 
     const handleError = (error: string) => {

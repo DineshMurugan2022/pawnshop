@@ -9,7 +9,13 @@ import CancelTransactionForm from './CancelTransactionForm';
 
 type TransactionTab = 'pledge_entry' | 'additional_pledge' | 'pledge_return' | 'part_payment' | 'pledge_sales' | 'cancel';
 
-const TransactionSection: React.FC = () => {
+import { PawnRequest } from '../../lib/supabase';
+
+interface TransactionSectionProps {
+    initialPawnRequest?: PawnRequest | null;
+}
+
+const TransactionSection: React.FC<TransactionSectionProps> = ({ initialPawnRequest }) => {
     const [activeTab, setActiveTab] = useState<TransactionTab>('pledge_entry');
     const [refreshKey, setRefreshKey] = useState(0);
 
@@ -40,8 +46,8 @@ const TransactionSection: React.FC = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === tab.id
-                                        ? 'bg-purple-600 text-white shadow-md'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-purple-600 text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
                                 <Icon className="h-4 w-4" />
@@ -55,42 +61,43 @@ const TransactionSection: React.FC = () => {
             {/* Content */}
             <div className="bg-white rounded-lg shadow-md p-6">
                 {activeTab === 'pledge_entry' && (
-                    <PledgeEntryForm 
+                    <PledgeEntryForm
                         key={refreshKey}
                         onSuccess={handleSuccess}
+                        initialPawnRequest={initialPawnRequest}
                     />
                 )}
 
                 {activeTab === 'additional_pledge' && (
-                    <AdditionalPledgeForm 
+                    <AdditionalPledgeForm
                         key={`additional-${refreshKey}`}
                         onSuccess={handleSuccess}
                     />
                 )}
 
                 {activeTab === 'pledge_return' && (
-                    <PledgeReturnForm 
+                    <PledgeReturnForm
                         key={`return-${refreshKey}`}
                         onSuccess={handleSuccess}
                     />
                 )}
 
                 {activeTab === 'part_payment' && (
-                    <PartPaymentForm 
+                    <PartPaymentForm
                         key={`partpayment-${refreshKey}`}
                         onSuccess={handleSuccess}
                     />
                 )}
 
                 {activeTab === 'pledge_sales' && (
-                    <PledgeSalesForm 
+                    <PledgeSalesForm
                         key={`sales-${refreshKey}`}
                         onSuccess={handleSuccess}
                     />
                 )}
 
                 {activeTab === 'cancel' && (
-                    <CancelTransactionForm 
+                    <CancelTransactionForm
                         key={`cancel-${refreshKey}`}
                         onSuccess={handleSuccess}
                     />

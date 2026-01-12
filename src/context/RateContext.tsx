@@ -34,10 +34,10 @@ export const RateProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const calculateProductPrice = (weight: number, metalType: string, wastagePercent: number, basePrice: number = 0, productName: string = '') => {
         let metalRate = 0;
 
-        switch (metalType.toLowerCase()) {
+        switch ((metalType || '').toLowerCase()) {
             case 'gold':
                 // Check if it's 24K (Coins) or 22K (Jewelry)
-                metalRate = productName.toLowerCase().includes('24k') ? rates.gold : rates.gold22k;
+                metalRate = (productName || '').toLowerCase().includes('24k') ? rates.gold : rates.gold22k;
                 break;
             case 'silver':
                 metalRate = rates.silver;

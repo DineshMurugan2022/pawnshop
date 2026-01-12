@@ -8,6 +8,7 @@ import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { WhatsAppButton } from './components/WhatsAppButton';
 
@@ -24,19 +25,20 @@ function AppContent() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/jewelry" element={<Jewelry />} />
         <Route path="/pawn" element={<Pawn />} />
-        <Route 
-          path="/admin/login" 
-          element={<AdminLogin />} 
+        <Route
+          path="/admin/login"
+          element={<AdminLogin />}
         />
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute requireAdmin={true}>
               <Admin />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
       <WhatsAppButton />
     </div>
