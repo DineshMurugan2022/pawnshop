@@ -115,6 +115,8 @@ export interface Customer {
     username?: string;
     password_hash?: string;
     is_active: boolean;
+    is_blocked?: boolean;
+    block_reason?: string;
     created_at: string;
     updated_at: string;
 }
@@ -307,6 +309,7 @@ export interface PledgeFormData {
     loan_amount: number;
     interest_rate: number;
     interest_type: 'monthly' | 'annual' | 'daily';
+    pledge_number?: string; // New: Custom bill number
     notes?: string;
     items: PledgeItemFormData[];
 }

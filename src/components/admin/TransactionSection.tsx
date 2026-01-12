@@ -1,17 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FileText, Plus, DollarSign, XCircle } from 'lucide-react';
+import PledgeEntryForm from './PledgeEntryForm';
+import PartPaymentForm from './PartPaymentForm';
+import PledgeReturnForm from './PledgeReturnForm';
+import AdditionalPledgeForm from './AdditionalPledgeForm';
+import PledgeSalesForm from './PledgeSalesForm';
+import CancelTransactionForm from './CancelTransactionForm';
+
+type TransactionTab = 'pledge_entry' | 'additional_pledge' | 'pledge_return' | 'part_payment' | 'pledge_sales' | 'cancel';
 
 const TransactionSection: React.FC = () => {
-    const [activeTab, setActiveTab] = React.useState('pledge_entry');
+    const [activeTab, setActiveTab] = useState<TransactionTab>('pledge_entry');
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const tabs = [
-        { id: 'pledge_entry', label: 'Pledge Entry', icon: Plus },
-        { id: 'additional_pledge', label: 'Additional Pledge', icon: FileText },
-        { id: 'pledge_return', label: 'Pledge Return', icon: DollarSign },
-        { id: 'part_payment', label: 'Part Payment', icon: DollarSign },
-        { id: 'pledge_sales', label: 'Pledge Sales', icon: FileText },
-        { id: 'cancel', label: 'Cancel Transaction', icon: XCircle },
+        { id: 'pledge_entry' as TransactionTab, label: 'Pledge Entry', icon: Plus },
+        { id: 'additional_pledge' as TransactionTab, label: 'Additional Pledge', icon: FileText },
+        { id: 'pledge_return' as TransactionTab, label: 'Pledge Return', icon: DollarSign },
+        { id: 'part_payment' as TransactionTab, label: 'Part Payment', icon: DollarSign },
+        { id: 'pledge_sales' as TransactionTab, label: 'Pledge Sales', icon: FileText },
+        { id: 'cancel' as TransactionTab, label: 'Cancel Transaction', icon: XCircle },
     ];
+
+    const handleSuccess = () => {
+        setRefreshKey(prev => prev + 1);
+    };
 
     return (
         <div className="space-y-6">
@@ -41,16 +54,47 @@ const TransactionSection: React.FC = () => {
 
             {/* Content */}
             <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <FileText className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Transaction Module</h3>
-                    <p className="text-gray-600">
-                        Transaction management features including pledge entry, returns, and part payments will be available here.
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                        This section requires the database to be set up first. Please run the SQL script in Supabase SQL Editor.
-                    </p>
-                </div>
+                {activeTab === 'pledge_entry' && (
+                    <PledgeEntryForm 
+                        key={refreshKey}
+                        onSuccess={handleSuccess}
+                    />
+                )}
+
+                {activeTab === 'additional_pledge' && (
+                    <AdditionalPledgeForm 
+                        key={`additional-${refreshKey}`}
+                        onSuccess={handleSuccess}
+                    />
+                )}
+
+                {activeTab === 'pledge_return' && (
+                    <PledgeReturnForm 
+                        key={`return-${refreshKey}`}
+                        onSuccess={handleSuccess}
+                    />
+                )}
+
+                {activeTab === 'part_payment' && (
+                    <PartPaymentForm 
+                        key={`partpayment-${refreshKey}`}
+                        onSuccess={handleSuccess}
+                    />
+                )}
+
+                {activeTab === 'pledge_sales' && (
+                    <PledgeSalesForm 
+                        key={`sales-${refreshKey}`}
+                        onSuccess={handleSuccess}
+                    />
+                )}
+
+                {activeTab === 'cancel' && (
+                    <CancelTransactionForm 
+                        key={`cancel-${refreshKey}`}
+                        onSuccess={handleSuccess}
+                    />
+                )}
             </div>
         </div>
     );

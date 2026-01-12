@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Eye, Edit2, User } from 'lucide-react';
 import { getCustomers, createCustomer, updateCustomer } from '../../services/pawnshopService';
 import type { Customer, CustomerFormData } from '../../types/pawnshop';
+import { toast } from '../../utils/toast';
 
 const CustomerSection: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -48,9 +49,10 @@ const CustomerSection: React.FC = () => {
             }
             resetForm();
             loadCustomers();
+            toast.success(editingCustomer ? 'Customer updated successfully' : 'Customer created successfully');
         } catch (error) {
             console.error('Error saving customer:', error);
-            alert('Failed to save customer');
+            toast.error('Failed to save customer');
         }
     };
 

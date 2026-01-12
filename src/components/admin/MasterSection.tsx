@@ -8,6 +8,7 @@ import {
     getBanks, createBank, updateBank, deleteBank
 } from '../../services/pawnshopService';
 import type { Company, LoanType, JewelleryType, Scheme, BankMaster } from '../../types/pawnshop';
+import { toast } from '../../utils/toast';
 
 type MasterTab = 'company' | 'loan_type' | 'jewellery_type' | 'scheme' | 'bank' | 'users';
 
@@ -97,20 +98,22 @@ const CompanyMaster: React.FC = () => {
             }
             resetForm();
             loadData();
+            toast.success(editingItem ? 'Company updated successfully' : 'Company created successfully');
         } catch (error) {
             console.error('Error saving company:', error);
-            alert('Failed to save company');
+            toast.error('Failed to save company');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this company?')) return;
+        if (!window.confirm('Are you sure you want to delete this company?')) return;
         try {
             await deleteCompany(id);
             loadData();
+            toast.success('Company deleted successfully');
         } catch (error) {
             console.error('Error deleting company:', error);
-            alert('Failed to delete company');
+            toast.error('Failed to delete company');
         }
     };
 
@@ -325,19 +328,22 @@ const LoanTypeMaster: React.FC = () => {
             }
             resetForm();
             loadData();
+            toast.success(editingItem ? 'Loan type updated successfully' : 'Loan type created successfully');
         } catch (error) {
             console.error('Error saving loan type:', error);
-            alert('Failed to save loan type');
+            toast.error('Failed to save loan type');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure?')) return;
+        if (!window.confirm('Are you sure?')) return;
         try {
             await deleteLoanType(id);
             loadData();
+            toast.success('Loan type deleted successfully');
         } catch (error) {
             console.error('Error deleting:', error);
+            toast.error('Failed to delete loan type');
         }
     };
 
@@ -450,18 +456,22 @@ const JewelleryTypeMaster: React.FC = () => {
             }
             resetForm();
             loadData();
+            toast.success(editingItem ? 'Jewellery type updated successfully' : 'Jewellery type created successfully');
         } catch (error) {
             console.error('Error saving jewellery type:', error);
+            toast.error('Failed to save jewellery type');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure?')) return;
+        if (!window.confirm('Are you sure?')) return;
         try {
             await deleteJewelleryType(id);
             loadData();
+            toast.success('Jewellery type deleted successfully');
         } catch (error) {
             console.error('Error deleting:', error);
+            toast.error('Failed to delete jewellery type');
         }
     };
 
@@ -584,18 +594,22 @@ const SchemeMaster: React.FC = () => {
             }
             resetForm();
             loadData();
+            toast.success(editingItem ? 'Scheme updated successfully' : 'Scheme created successfully');
         } catch (error) {
             console.error('Error saving scheme:', error);
+            toast.error('Failed to save scheme');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure?')) return;
+        if (!window.confirm('Are you sure?')) return;
         try {
             await deleteScheme(id);
             loadData();
+            toast.success('Scheme deleted successfully');
         } catch (error) {
             console.error('Error deleting:', error);
+            toast.error('Failed to delete scheme');
         }
     };
 
@@ -785,18 +799,22 @@ const BankMasterComponent: React.FC = () => {
             }
             resetForm();
             loadData();
+            toast.success(editingItem ? 'Bank updated successfully' : 'Bank created successfully');
         } catch (error) {
             console.error('Error saving bank:', error);
+            toast.error('Failed to save bank');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure?')) return;
+        if (!window.confirm('Are you sure?')) return;
         try {
             await deleteBank(id);
             loadData();
+            toast.success('Bank deleted successfully');
         } catch (error) {
             console.error('Error deleting:', error);
+            toast.error('Failed to delete bank');
         }
     };
 

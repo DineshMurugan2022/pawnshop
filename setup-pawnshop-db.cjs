@@ -1,15 +1,30 @@
 const { Client } = require('pg');
 
+// SECURITY: Use environment variables instead of hardcoded credentials
+// Set these in your environment or .env file before running this script
 const config = {
-    user: 'postgres',
-    password: 'Dinesh@6702',
-    host: 'db.rieyzldbygsgfiwhfdmo.supabase.co',
-    port: 5432,
-    database: 'postgres',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    host: process.env.DB_HOST || '',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    database: process.env.DB_NAME || 'postgres',
     ssl: {
         rejectUnauthorized: false
     }
 };
+
+// Validate required environment variables
+if (!config.password || !config.host) {
+    console.error('❌ Error: Missing required database credentials!');
+    console.error('Please set the following environment variables:');
+    console.error('  DB_PASSWORD=your_password');
+    console.error('  DB_HOST=your_supabase_db_host');
+    console.error('  DB_USER=your_db_user (optional, defaults to postgres)');
+    console.error('  DB_NAME=your_db_name (optional, defaults to postgres)');
+    console.error('\nExample:');
+    console.error('  DB_PASSWORD=your_password DB_HOST=db.xxx.supabase.co node setup-pawnshop-db.cjs');
+    process.exit(1);
+}
 
 const sql = `
 -- ============================================
