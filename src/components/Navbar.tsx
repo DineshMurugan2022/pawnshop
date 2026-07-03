@@ -65,7 +65,7 @@ export default function Navbar() {
           .from('customers')
           .select('id')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (!customer) return;
 
@@ -89,7 +89,7 @@ export default function Navbar() {
         .from('customers')
         .select('id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!customer) return;
 

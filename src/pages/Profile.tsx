@@ -51,7 +51,7 @@ const Profile: React.FC = () => {
                 .from(table)
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (error) {
                 if (error.code === 'PGRST116') {

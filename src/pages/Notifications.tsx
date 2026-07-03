@@ -34,7 +34,7 @@ const Notifications: React.FC = () => {
                 .from('profiles')
                 .select('id')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (!profile) return;
 
@@ -73,7 +73,7 @@ const Notifications: React.FC = () => {
                 .from('customers')
                 .select('id')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (!customer) {
                 setNotifications([]);

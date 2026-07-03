@@ -100,7 +100,7 @@ const OnlineRequests: React.FC<OnlineRequestsProps> = ({ onApprove }) => {
                     <thead className="bg-gray-50 text-xs font-black text-gray-400 uppercase tracking-wider">
                         <tr>
                             <th className="p-4">Date</th>
-                            <th className="p-4">User ID</th> {/* Or Name if joined */}
+                            <th className="p-4">User ID</th>
                             <th className="p-4">Item Description</th>
                             <th className="p-4">Requested Amount</th>
                             <th className="p-4 text-right">Actions</th>
